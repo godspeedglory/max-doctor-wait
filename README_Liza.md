@@ -1,66 +1,63 @@
-# MAX Bot Integration
+# Интеграция MAX-бота
 
-## Branch
+## Ветка разработки
 
-Current branch:
+Текущая ветка:
 
 ```
 liza
 ```
 
-## Module
+## Ответственный модуль
 
-MAX Bot integration and user notification system.
+MAX Bot Integration
 
-Responsible part:
-- MAX chatbot;
-- user identification;
-- user storage;
-- notification sending.
+Данный модуль отвечает за:
 
----
-
-# Description
-
-This module is responsible for communication between users and the MAX chatbot in the doctor appointment waiting system.
-
-The bot allows users to:
-- start interaction with the service;
-- create a waiting request;
-- save user information;
-- receive notifications when a suitable appointment slot is found.
+- взаимодействие пользователя с MAX-ботом;
+- получение данных пользователя;
+- сохранение пользователей;
+- отправку уведомлений о найденной записи.
 
 ---
 
-# Implemented functionality
+# Описание
 
-## MAX Bot
+Модуль реализует серверную часть интеграции с MAX для проекта ожидания свободной записи к врачу.
 
-Implemented:
+Основная задача бота — уведомить пользователя в MAX, когда backend найдет подходящее свободное время для записи.
 
-- MAX Bot API connection;
-- bot launch using Node.js;
-- `/start` command processing;
-- welcome message;
-- inline button:
+---
+
+# Реализованный функционал
+
+## MAX-бот
+
+Реализовано:
+
+ Подключение MAX Bot API  
+ Запуск бота через Node.js  
+ Обработка команды `/start`  
+ Приветственное сообщение пользователю  
+ Inline-кнопка:
 
 ```
-🔎 Ждать свободное окно
+ Ждать свободное окно
 ```
 
 ---
 
-# User identification
+# Работа с пользователем
 
-After user interaction, the bot receives MAX user information.
+При взаимодействии с ботом получаются данные пользователя MAX.
 
-User identifier:
+Основной идентификатор:
 
 ```javascript
 ctx.user.user_id
 ```
 
-Example:
+Пример данных:
 
 ```json
 {
@@ -69,19 +66,19 @@ Example:
 }
 ```
 
-This identifier is used for sending personal notifications.
+Данный идентификатор используется для отправки персональных уведомлений.
 
 ---
 
-# User storage
+# Хранение пользователей
 
-Users are stored locally in:
+Для хранения пользователей используется локальное хранилище:
 
 ```
 users.json
 ```
 
-Example:
+Пример:
 
 ```json
 [
@@ -92,13 +89,13 @@ Example:
 ]
 ```
 
-Storage logic is located in:
+Логика работы с пользователями находится в файле:
 
 ```
 users.js
 ```
 
-Functions:
+Основные функции:
 
 ```javascript
 saveUser()
@@ -107,35 +104,31 @@ getUsers()
 
 ---
 
-# Notification system
+# Система уведомлений
 
-Notification logic is separated into:
+Логика отправки сообщений вынесена в отдельный модуль:
 
 ```
 notifications.js
 ```
 
-Main function:
+Основная функция:
 
 ```javascript
 notifyUser(userId, slot)
 ```
 
-Function parameters:
+Она принимает:
 
-```javascript
-userId
-```
+### userId
 
-MAX user identifier.
+Идентификатор пользователя MAX.
 
-```javascript
-slot
-```
+### slot
 
-Information about found appointment.
+Информация о найденном свободном времени.
 
-Example:
+Пример:
 
 ```json
 {
@@ -145,35 +138,31 @@ Example:
 }
 ```
 
-Result:
-
-The user receives a notification in MAX.
-
-Example:
+После вызова функции пользователь получает сообщение:
 
 ```
-🎉 Нашлось свободное окно!
+ Нашлось свободное окно!
 
-👨‍⚕️ Специальность: Терапевт
-📅 Дата: 21 сентября
-🕐 Время: 14:30
+ Специальность: Терапевт
+ Дата: 21 сентября
+ Время: 14:30
 
 Открой приложение, чтобы посмотреть запись.
 ```
 
 ---
 
-# Testing
+# Тестирование
 
-For testing the notification system, the bot has a command:
+Для проверки работы уведомлений реализована команда:
 
 ```
 /testslot
 ```
 
-This command simulates the situation when backend finds a suitable appointment slot.
+Команда имитирует ситуацию, когда backend нашел подходящий слот.
 
-Flow:
+Сценарий работы:
 
 ```
 /testslot
@@ -188,54 +177,43 @@ MAX Bot API
 
 ↓
 
-User receives notification
+Пользователь получает уведомление
 ```
 
 ---
 
-# Project files
+# Структура файлов
 
 ```
-bot.js
-```
+max-doctor-wait/
 
-Main MAX bot file.
-
+├── bot.js
+│   Основной файл MAX-бота
+│
+├── notifications.js
+│   Модуль отправки уведомлений
+│
+├── users.js
+│   Работа с сохранением пользователей
+│
+├── users.json
+│   Локальное хранилище пользователей
+│
+└── README_LIZA.md
+    Документация модуля MAX Bot
 ```
-notifications.js
-```
-
-Notification sending module.
-
-```
-users.js
-```
-
-User storage module.
-
-```
-users.json
-```
-
-Local user storage.
-
-```
-README_LIZA.md
-```
-
-Documentation for MAX Bot module.
 
 ---
 
-# Running the project
+# Запуск проекта
 
-Install dependencies:
+Установка зависимостей:
 
 ```bash
 npm install
 ```
 
-Run bot:
+Запуск бота:
 
 ```bash
 node --use-system-ca bot.js
@@ -243,38 +221,38 @@ node --use-system-ca bot.js
 
 ---
 
-# Environment variables
+# Переменные окружения
 
-Create:
+Для работы необходимо создать файл:
 
 ```
 .env
 ```
 
-with:
+и добавить:
 
 ```env
-MAX_BOT_TOKEN=your_token
+MAX_BOT_TOKEN=ваш_токен_бота
 ```
 
 ---
 
-# Backend integration
+# Интеграция с Backend
 
-Current implementation is ready for backend connection.
+Текущая реализация подготовлена для подключения backend-сервера.
 
-Expected future flow:
+Предполагаемый сценарий:
 
 ```
-Backend matching engine
+Backend
 
 ↓
 
-Suitable appointment slot found
+Matching Engine находит подходящую запись
 
 ↓
 
-Send userId + slot data
+Передается userId и данные слота
 
 ↓
 
@@ -286,23 +264,23 @@ MAX Bot API
 
 ↓
 
-User receives notification
+Пользователь получает уведомление
 ```
 
 ---
 
-# Status
+# Текущий статус
 
-Completed:
+Реализовано:
 
-✅ MAX bot connection  
-✅ User interaction  
-✅ User identification  
-✅ User storage  
-✅ Notification system  
-✅ Test notification flow  
+ MAX-бот  
+ Получение пользователя MAX  
+ Сохранение user_id  
+ Хранение пользователей  
+ Система уведомлений  
+ Тестовая отправка найденного слота  
 
-Branch:
+Ветка:
 
 ```
 liza
