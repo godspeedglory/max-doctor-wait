@@ -131,6 +131,119 @@ app.post("/api/check-matches", (req, res) => {
     notifications: notifications
   });
 });
+app.post("/api/schedule", (req, res) => {
+  const {
+    doctorId,
+    doctorName,
+    specialty,
+    date,
+    weekday,
+    time
+  } = req.body;
+
+  const newSlot = {
+    id: doctorSchedule.length + 1,
+    doctorId,
+    doctorName,
+    specialty,
+    date,
+    weekday,
+    time,
+    available: true
+  };
+
+  doctorSchedule.push(newSlot);
+
+  const matches = [];
+
+  for (const request of waitingRequests) {
+    if (request.status !== "active") {
+      continue;
+    }
+
+    if (isSlotMatching(request, newSlot)) {
+      const match = {
+        requestId: request.id,
+        userId: request.userId,
+        slot: newSlot
+      };
+
+      const notification = notifyBot(match);
+
+      matches.push(notification);
+    }
+  }
+
+  res.status(201).json({
+    slot: newSlot,
+    matchesFound: matches.length,
+    notifications: matches
+  });
+});
+//Получение ожидания пользователя
+app.get("/api/users/:userId/waiting", (req, res) => {
+  const userId = req.params.userId;
+
+  const requests = waitingRequests.filter(
+    (request) => request.userId === userId
+  );
+
+  res.json(requests);
+});
+//Получить найденные записи пользователя
+app.get("/api/users/:userId/matches", (req, res) => {
+  const userId = req.params.userId;
+
+  const matches = [];
+
+  for (const request of waitingRequests) {
+
+    if (
+      request.userId !== userId ||
+      request.status !== "active"
+    ) {
+      continue;
+    }
+
+    for (const slot of doctorSchedule) {
+
+      if (isSlotMatching(request, slot)) {
+
+        matches.push({
+          doctorName: slot.doctorName,
+          specialty: slot.specialty,
+          date: slot.date,
+          time: slot.time
+        });
+
+      }
+    }
+  }
+
+  res.json(matches);
+});
+app.get("/api/waiting-requests/:id/status", (req, res) => {
+
+  const id = Number(req.params.id);
+
+  const request = waitingRequests.find(
+    (item) => item.id === id
+  );
+
+
+  if (!request) {
+    return res.status(404).json({
+      error: "Request not found"
+    });
+  }
+
+
+  res.json({
+    id: request.id,
+    status: request.status
+  });
+
+});
 app.listen(PORT, () => {
   console.log(`Server started on http://localhost:${PORT}`);
 });
