@@ -1,41 +1,42 @@
-function createNotifier(bot) {
+async function notifyUser(bot, userId, appointment) {
 
-  async function notifyUser(userId, slot) {
+  const message =
+    ' Нашлось свободное окно!\n\n' +
+    ` Специальность: ${appointment.specialty}\n` +
+    ` Дата: ${appointment.date}\n` +
+    ` Время: ${appointment.time}\n\n` +
+    'Открой приложение, чтобы посмотреть запись.';
 
-    const message =
-      '🎉 Нашлось свободное окно!\n\n' +
-      `👨‍⚕️ Специальность: ${slot.specialty}\n` +
-      `📅 Дата: ${slot.date}\n` +
-      `🕐 Время: ${slot.time}\n\n` +
-      'Открой приложение, чтобы посмотреть запись.';
 
-    try {
+  try {
 
-      await bot.api.sendMessageToUser(userId, message);
+    await bot.api.sendMessageToUser(
+      userId,
+      message
+    );
 
-      console.log(
-        `✅ Уведомление отправлено пользователю ${userId}`
-      );
 
-      return true;
+    console.log(
+      `✅ Уведомление отправлено пользователю ${userId}`
+    );
 
-    } catch (error) {
 
-      console.error(
-        `❌ Ошибка отправки уведомления пользователю ${userId}:`
-      );
+    return true;
 
-      console.error(error);
 
-      return false;
-    }
+  } catch (error) {
+
+    console.error(
+      `❌ Ошибка отправки уведомления пользователю ${userId}:`
+    );
+
+    console.error(error);
+
+    return false;
   }
-
-  return {
-    notifyUser
-  };
 }
 
+
 module.exports = {
-  createNotifier
+  notifyUser
 };

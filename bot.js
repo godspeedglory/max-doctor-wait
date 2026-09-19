@@ -1,13 +1,16 @@
 require('dotenv').config();
 
-const { createNotifier } = require('./notifications');
+const { notifyUser } = require('./notifications');
 const { saveUser } = require('./users');
+
 
 async function main() {
 
   const { Bot, Keyboard } = await import('@maxhub/max-bot-api');
 
+
   const token = process.env.MAX_BOT_TOKEN;
+
 
   if (!token) {
     console.error('Ошибка: MAX_BOT_TOKEN не найден в .env');
@@ -17,14 +20,11 @@ async function main() {
 
   const bot = new Bot(token);
 
-  // Подключаем уведомления
-  const { notifyUser } = createNotifier(bot);
 
 
-
-  // ==========================================
-  // КЛАВИАТУРА
-  // ==========================================
+  // ============================
+  // Кнопка
+  // ============================
 
   const startKeyboard = Keyboard.inlineKeyboard([
     [
@@ -37,11 +37,12 @@ async function main() {
 
 
 
-  // ==========================================
-  // СОХРАНЕНИЕ ПОЛЬЗОВАТЕЛЯ + ПРИВЕТСТВИЕ
-  // ==========================================
+  // ============================
+  // /start
+  // ============================
 
   async function sendWelcome(ctx) {
+
 
     const userId = ctx.user?.user_id;
 
@@ -53,16 +54,18 @@ async function main() {
         name: ctx.user?.first_name
       });
 
+
       console.log(
-        `👤 Пользователь MAX: ${userId}`
+        `👤 Пользователь MAX сохранён: ${userId}`
       );
     }
+
 
 
     await ctx.reply(
       'Привет! 👋\n\n' +
       'Я помогу дождаться подходящего времени для записи к врачу.\n\n' +
-      'Нажми кнопку ниже, чтобы настроить ожидание.',
+      'Нажми кнопку ниже, чтобы создать ожидание.',
       {
         attachments: [startKeyboard]
       }
@@ -71,77 +74,95 @@ async function main() {
   }
 
 
-  bot.command('start', sendWelcome);
 
-  bot.on('bot_started', sendWelcome);
+  bot.command(
+    'start',
+    sendWelcome
+  );
 
 
-
-
-  // ==========================================
-  // КНОПКА ОЖИДАНИЯ
-  // ==========================================
-
-  bot.action('create_waiting', async (ctx) => {
-
-    await ctx.reply(
-      'Отлично! ✅\n\n' +
-      'Ожидание записи будет настроено через Mini App.'
-    );
-
-  });
+  bot.on(
+    'bot_started',
+    sendWelcome
+  );
 
 
 
+  // ============================
+  // Кнопка ожидания
+  // ============================
 
-  // ==========================================
-  // ТЕСТ УВЕДОМЛЕНИЯ
-  // ==========================================
+  bot.action(
+    'create_waiting',
+    async (ctx) => {
 
-  bot.command('testslot', async (ctx) => {
-
-    const userId = ctx.user?.user_id;
-
-
-    if (!userId) {
-
-      console.error(
-        '❌ Не удалось определить user_id'
+      await ctx.reply(
+        'Отлично! ✅\n\n' +
+        'Ожидание записи будет создано через Mini App.'
       );
 
-      return;
     }
-
-
-    console.log(
-      `🧪 Имитируем найденный слот для пользователя ${userId}`
-    );
-
-
-    const testSlot = {
-
-      specialty: 'Терапевт',
-
-      date: '21 сентября',
-
-      time: '14:30'
-
-    };
-
-
-    await notifyUser(
-      userId,
-      testSlot
-    );
-
-  });
+  );
 
 
 
+  // ============================
+  // Тест уведомления
+  // ============================
 
-  // ==========================================
-  // ЗАПУСК
-  // ==========================================
+  bot.command(
+    'testslot',
+    async (ctx) => {
+
+
+      const userId = ctx.user?.user_id;
+
+
+      if (!userId) {
+
+        console.log(
+          '❌ Не найден user_id'
+        );
+
+        return;
+      }
+
+
+
+      const appointment = {
+
+        specialty: 'Терапевт',
+
+        date: '21 сентября',
+
+        time: '14:30'
+
+      };
+
+
+
+      console.log(
+        `🧪 Отправка тестового уведомления пользователю ${userId}`
+      );
+
+
+
+      await notifyUser(
+        bot,
+        userId,
+        appointment
+      );
+
+
+    }
+  );
+
+
+
+  // ============================
+  // Запуск
+  // ============================
+
 
   console.log(
     'Запускаю MAX-бота...'
@@ -158,14 +179,17 @@ async function main() {
 }
 
 
-main().catch((error) => {
 
-  console.error(
-    'Ошибка запуска бота:'
-  );
+main().catch(
+  (error) => {
 
-  console.error(error);
+    console.error(
+      'Ошибка запуска бота:'
+    );
 
-  process.exit(1);
+    console.error(error);
 
-});
+    process.exit(1);
+
+  }
+);
