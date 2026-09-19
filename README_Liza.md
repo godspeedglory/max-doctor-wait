@@ -33,7 +33,7 @@ MAX Bot Integration
 
 ## MAX-бот
 
-Реализовано:
+Уже реализовано:
 
  Подключение MAX Bot API  
  Запуск бота через Node.js  
