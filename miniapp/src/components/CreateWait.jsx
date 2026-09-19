@@ -9,7 +9,15 @@ const specialties = [
   "Кардиолог",
 ];
 
-const weekDays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+const weekDays = [
+  { short: "Пн", full: "Понедельник" },
+  { short: "Вт", full: "Вторник" },
+  { short: "Ср", full: "Среда" },
+  { short: "Чт", full: "Четверг" },
+  { short: "Пт", full: "Пятница" },
+  { short: "Сб", full: "Суббота" },
+  { short: "Вс", full: "Воскресенье" },
+];
 
 function CreateWait({ onCreate }) {
   const [specialty, setSpecialty] = useState("");
@@ -19,6 +27,7 @@ function CreateWait({ onCreate }) {
   const [timeFrom, setTimeFrom] = useState("");
   const [timeTo, setTimeTo] = useState("");
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   function toggleDay(day) {
     setSelectedDays((currentDays) =>
@@ -28,8 +37,9 @@ function CreateWait({ onCreate }) {
     );
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
+    setMessage("");
 
     if (selectedDays.length === 0) {
       setMessage("Выберите хотя бы один день недели");
@@ -46,25 +56,59 @@ function CreateWait({ onCreate }) {
       return;
     }
 
+    const weekdays = selectedDays.map((shortDay) => {
+      const day = weekDays.find((item) => item.short === shortDay);
+      return day.full;
+    });
+
     const waitRequest = {
-      id: Date.now(),
+      userId: "maya_test",
       specialty,
       dateFrom,
       dateTo,
-      days: selectedDays,
+      weekdays,
       timeFrom,
       timeTo,
     };
 
-    onCreate(waitRequest);
+    try {
+      setIsLoading(true);
 
-    setSpecialty("");
-    setDateFrom("");
-    setDateTo("");
-    setSelectedDays([]);
-    setTimeFrom("");
-    setTimeTo("");
-    setMessage("");
+      const response = await fetch(
+        "http://localhost:3000/api/waiting-requests",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(waitRequest),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Не удалось создать ожидание");
+      }
+
+      const createdWait = await response.json();
+
+      onCreate({
+        ...createdWait,
+        days: createdWait.weekdays,
+      });
+
+      setSpecialty("");
+      setDateFrom("");
+      setDateTo("");
+      setSelectedDays([]);
+      setTimeFrom("");
+      setTimeTo("");
+      setMessage("");
+    } catch (error) {
+      console.error("Ошибка создания ожидания:", error);
+      setMessage("Не удалось создать ожидание. Попробуйте ещё раз.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -126,14 +170,16 @@ function CreateWait({ onCreate }) {
           <div className="days">
             {weekDays.map((day) => (
               <button
-                key={day}
+                key={day.short}
                 type="button"
                 className={
-                  selectedDays.includes(day) ? "day active" : "day"
+                  selectedDays.includes(day.short)
+                    ? "day active"
+                    : "day"
                 }
-                onClick={() => toggleDay(day)}
+                onClick={() => toggleDay(day.short)}
               >
-                {day}
+                {day.short}
               </button>
             ))}
           </div>
@@ -165,8 +211,12 @@ function CreateWait({ onCreate }) {
           </div>
         </div>
 
-        <button className="submit-button" type="submit">
-          Начать отслеживание
+        <button
+          className="submit-button"
+          type="submit"
+          disabled={isLoading}
+        >
+          {isLoading ? "Создаём..." : "Начать отслеживание"}
         </button>
 
         {message && <p className="message error">{message}</p>}
