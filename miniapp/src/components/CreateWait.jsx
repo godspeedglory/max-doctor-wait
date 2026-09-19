@@ -61,8 +61,16 @@ function CreateWait({ onCreate }) {
       return day.full;
     });
 
+    // Внутри MAX берём настоящий ID пользователя.
+    // При обычном локальном запуске используем тестовый ID.
+    const maxUserId = window.WebApp?.initDataUnsafe?.user?.id;
+
+    const userId = maxUserId
+      ? String(maxUserId)
+      : "maya_test";
+
     const waitRequest = {
-      userId: "maya_test",
+      userId,
       specialty,
       dateFrom,
       dateTo,
@@ -75,7 +83,7 @@ function CreateWait({ onCreate }) {
       setIsLoading(true);
 
       const response = await fetch(
-        "http://localhost:3000/api/waiting-requests",
+        "https://scientist-sponsors-tape-developed.trycloudflare.com/api/waiting-requests",
         {
           method: "POST",
           headers: {

@@ -11,7 +11,7 @@ function App() {
     async function loadWaits() {
       try {
         const response = await fetch(
-          "http://localhost:3000/api/waiting-requests"
+          "https://scientist-sponsors-tape-developed.trycloudflare.com/api/waiting-requests"
         );
 
         if (!response.ok) {
@@ -44,7 +44,7 @@ function App() {
   async function deleteWait(id) {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/waiting-requests/${id}/cancel`,
+        `https://scientist-sponsors-tape-developed.trycloudflare.com/api/waiting-requests/${id}/cancel`,
         {
           method: "PATCH",
         }
