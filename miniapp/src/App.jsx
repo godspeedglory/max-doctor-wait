@@ -11,7 +11,7 @@ function App() {
     async function loadWaits() {
       try {
         const response = await fetch(
-          "https://scientist-sponsors-tape-developed.trycloudflare.com/api/waiting-requests"
+          "https://variables-cement-emotions-src.trycloudflare.com/api/waiting-requests"
         );
 
         if (!response.ok) {
@@ -44,7 +44,7 @@ function App() {
   async function deleteWait(id) {
     try {
       const response = await fetch(
-        `https://scientist-sponsors-tape-developed.trycloudflare.com/api/waiting-requests/${id}/cancel`,
+        `https://variables-cement-emotions-src.trycloudflare.com/api/waiting-requests/${id}/cancel`,
         {
           method: "PATCH",
         }

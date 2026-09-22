@@ -83,7 +83,7 @@ function CreateWait({ onCreate }) {
       setIsLoading(true);
 
       const response = await fetch(
-        "https://scientist-sponsors-tape-developed.trycloudflare.com/api/waiting-requests",
+        "https://variables-cement-emotions-src.trycloudflare.com/api/waiting-requests",
         {
           method: "POST",
           headers: {
