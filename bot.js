@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+const http = require('http');
 const { notifyUser } = require('./notifications');
 const { saveUser } = require('./users');
 
@@ -21,6 +22,123 @@ async function main() {
   const bot = new Bot(token);
 
 
+  // ============================
+  // Локальный сервер уведомлений
+  // ============================
+
+  const notificationServer = http.createServer((req, res) => {
+
+    if (req.method !== 'POST' || req.url !== '/notify') {
+      res.writeHead(404, {
+        'Content-Type': 'application/json'
+      });
+
+      res.end(
+        JSON.stringify({
+          error: 'Not found'
+        })
+      );
+
+      return;
+    }
+
+
+    let body = '';
+
+
+    req.on('data', (chunk) => {
+      body += chunk;
+    });
+
+
+    req.on('end', async () => {
+
+      try {
+
+        const {
+          userId,
+          appointment
+        } = JSON.parse(body);
+
+
+        if (!userId || !appointment) {
+
+          res.writeHead(400, {
+            'Content-Type': 'application/json'
+          });
+
+          res.end(
+            JSON.stringify({
+              error: 'userId and appointment are required'
+            })
+          );
+
+          return;
+        }
+
+
+        console.log(
+          `📨 Получено уведомление для пользователя ${userId}`
+        );
+
+
+        const sent = await notifyUser(
+          bot,
+          userId,
+          appointment
+        );
+
+
+        res.writeHead(sent ? 200 : 500, {
+          'Content-Type': 'application/json'
+        });
+
+
+        res.end(
+          JSON.stringify({
+            sent
+          })
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          'Ошибка /notify:',
+          error
+        );
+
+
+        res.writeHead(400, {
+          'Content-Type': 'application/json'
+        });
+
+
+        res.end(
+          JSON.stringify({
+            error: 'Invalid request'
+          })
+        );
+
+      }
+
+    });
+
+  });
+
+
+  notificationServer.listen(
+    3001,
+    '127.0.0.1',
+    () => {
+
+      console.log(
+        'Сервис уведомлений запущен на http://127.0.0.1:3001'
+      );
+
+    }
+  );
+
 
   // ============================
   // Кнопка
@@ -36,13 +154,11 @@ async function main() {
   ]);
 
 
-
   // ============================
   // /start
   // ============================
 
   async function sendWelcome(ctx) {
-
 
     const userId = ctx.user?.user_id;
 
@@ -58,8 +174,8 @@ async function main() {
       console.log(
         `👤 Пользователь MAX сохранён: ${userId}`
       );
-    }
 
+    }
 
 
     await ctx.reply(
@@ -74,7 +190,6 @@ async function main() {
   }
 
 
-
   bot.command(
     'start',
     sendWelcome
@@ -85,7 +200,6 @@ async function main() {
     'bot_started',
     sendWelcome
   );
-
 
 
   // ============================
@@ -105,7 +219,6 @@ async function main() {
   );
 
 
-
   // ============================
   // Тест уведомления
   // ============================
@@ -113,7 +226,6 @@ async function main() {
   bot.command(
     'testslot',
     async (ctx) => {
-
 
       const userId = ctx.user?.user_id;
 
@@ -128,7 +240,6 @@ async function main() {
       }
 
 
-
       const appointment = {
 
         specialty: 'Терапевт',
@@ -140,11 +251,9 @@ async function main() {
       };
 
 
-
       console.log(
         `🧪 Отправка тестового уведомления пользователю ${userId}`
       );
-
 
 
       await notifyUser(
@@ -153,16 +262,13 @@ async function main() {
         appointment
       );
 
-
     }
   );
-
 
 
   // ============================
   // Запуск
   // ============================
-
 
   console.log(
     'Запускаю MAX-бота...'
@@ -177,7 +283,6 @@ async function main() {
   );
 
 }
-
 
 
 main().catch(
