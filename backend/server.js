@@ -1,15 +1,11 @@
 const express = require("express");
-const cors = require("cors");
-
 const waitingRequests = require("./data/waitingRequests");
 const doctorSchedule = require("./data/doctorSchedule");
 const { isSlotMatching } = require("./services/matchingEngine");
-const { notifyBot } = require("./services/notificationService");
-
+const { createMatchNotification } = require("./services/notificationService");
 const app = express();
 const PORT = 3000;
 
-app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -18,11 +14,9 @@ app.get("/", (req, res) => {
     message: "MAX backend is running",
   });
 });
-
 app.get("/api/waiting-requests", (req, res) => {
   res.json(waitingRequests);
 });
-
 app.post("/api/waiting-requests", (req, res) => {
   const {
     userId,
@@ -33,6 +27,11 @@ app.post("/api/waiting-requests", (req, res) => {
     timeFrom,
     timeTo
   } = req.body;
+  if (!userId) {
+    return res.status(400).json({
+      error: "userId is required"
+    });
+  }
 
   const newRequest = {
     id: waitingRequests.length + 1,
@@ -51,11 +50,9 @@ app.post("/api/waiting-requests", (req, res) => {
 
   res.status(201).json(newRequest);
 });
-
 app.get("/api/schedule", (req, res) => {
   res.json(doctorSchedule);
 });
-
 app.get("/api/matches", (req, res) => {
   const matches = [];
 
@@ -77,8 +74,7 @@ app.get("/api/matches", (req, res) => {
 
   res.json(matches);
 });
-
-// Получить конкретную заявку
+//Получить конкретную заявку
 app.get("/api/waiting-requests/:id", (req, res) => {
   const requestId = Number(req.params.id);
 
@@ -94,8 +90,7 @@ app.get("/api/waiting-requests/:id", (req, res) => {
 
   res.json(waitingRequest);
 });
-
-// Отменить ожидание
+//Отменить ожидание
 app.patch("/api/waiting-requests/:id/cancel", (req, res) => {
   const requestId = Number(req.params.id);
 
@@ -113,8 +108,7 @@ app.patch("/api/waiting-requests/:id/cancel", (req, res) => {
 
   res.json(waitingRequest);
 });
-
-// Тестовый эндпоинт
+//Тестовый эндпоинт
 app.post("/api/check-matches", (req, res) => {
   const notifications = [];
 
@@ -131,7 +125,7 @@ app.post("/api/check-matches", (req, res) => {
           slot: slot
         };
 
-        const notification = notifyBot(match);
+        const notification = createMatchNotification(match);
         notifications.push(notification);
       }
     }
@@ -142,7 +136,6 @@ app.post("/api/check-matches", (req, res) => {
     notifications: notifications
   });
 });
-
 app.post("/api/schedule", (req, res) => {
   const {
     doctorId,
@@ -180,7 +173,7 @@ app.post("/api/schedule", (req, res) => {
         slot: newSlot
       };
 
-      const notification = notifyBot(match);
+      const notification = createMatchNotification(match);
 
       matches.push(notification);
     }
@@ -192,8 +185,7 @@ app.post("/api/schedule", (req, res) => {
     notifications: matches
   });
 });
-
-// Получение ожидания пользователя
+//Получение ожидания пользователя
 app.get("/api/users/:userId/waiting", (req, res) => {
   const userId = req.params.userId;
 
@@ -203,14 +195,14 @@ app.get("/api/users/:userId/waiting", (req, res) => {
 
   res.json(requests);
 });
-
-// Получить найденные записи пользователя
+//Получить найденные записи пользователя
 app.get("/api/users/:userId/matches", (req, res) => {
   const userId = req.params.userId;
 
   const matches = [];
 
   for (const request of waitingRequests) {
+
     if (
       request.userId !== userId ||
       request.status !== "active"
@@ -219,26 +211,30 @@ app.get("/api/users/:userId/matches", (req, res) => {
     }
 
     for (const slot of doctorSchedule) {
+
       if (isSlotMatching(request, slot)) {
+
         matches.push({
           doctorName: slot.doctorName,
           specialty: slot.specialty,
           date: slot.date,
           time: slot.time
         });
+
       }
     }
   }
 
   res.json(matches);
 });
-
 app.get("/api/waiting-requests/:id/status", (req, res) => {
+
   const id = Number(req.params.id);
 
   const request = waitingRequests.find(
     (item) => item.id === id
   );
+
 
   if (!request) {
     return res.status(404).json({
@@ -246,12 +242,13 @@ app.get("/api/waiting-requests/:id/status", (req, res) => {
     });
   }
 
+
   res.json({
     id: request.id,
     status: request.status
   });
-});
 
+});
 app.listen(PORT, () => {
   console.log(`Server started on http://localhost:${PORT}`);
 });
