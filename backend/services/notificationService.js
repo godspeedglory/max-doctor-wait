@@ -1,4 +1,4 @@
-function notifyBot(match) {
+function createMatchNotification(match) {
   const notification = {
     type: "appointment_found",
     userId: match.userId,
@@ -18,4 +18,4 @@ function notifyBot(match) {
   return notification;
 }
 
-module.exports = { notifyBot };
+module.exports = { createMatchNotification };

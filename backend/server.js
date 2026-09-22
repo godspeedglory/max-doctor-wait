@@ -2,7 +2,7 @@ const express = require("express");
 const waitingRequests = require("./data/waitingRequests");
 const doctorSchedule = require("./data/doctorSchedule");
 const { isSlotMatching } = require("./services/matchingEngine");
-const { notifyBot } = require("./services/notificationService");
+const { createMatchNotification } = require("./services/notificationService");
 const app = express();
 const PORT = 3000;
 
@@ -27,6 +27,11 @@ app.post("/api/waiting-requests", (req, res) => {
     timeFrom,
     timeTo
   } = req.body;
+  if (!userId) {
+    return res.status(400).json({
+      error: "userId is required"
+    });
+  }
 
   const newRequest = {
     id: waitingRequests.length + 1,
@@ -120,7 +125,7 @@ app.post("/api/check-matches", (req, res) => {
           slot: slot
         };
 
-        const notification = notifyBot(match);
+        const notification = createMatchNotification(match);
         notifications.push(notification);
       }
     }
@@ -168,7 +173,7 @@ app.post("/api/schedule", (req, res) => {
         slot: newSlot
       };
 
-      const notification = notifyBot(match);
+      const notification = createMatchNotification(match);
 
       matches.push(notification);
     }
