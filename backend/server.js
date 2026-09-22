@@ -1,10 +1,22 @@
 const express = require("express");
+const cors = require("cors");
+
 const waitingRequests = require("./data/waitingRequests");
 const doctorSchedule = require("./data/doctorSchedule");
 const { isSlotMatching } = require("./services/matchingEngine");
 const { createMatchNotification } = require("./services/notificationService");
+
 const app = express();
 const PORT = 3000;
+
+// Разрешаем запросы из Mini App на Vercel
+app.use(
+  cors({
+    origin: "https://max-doctor-wait.vercel.app",
+    methods: ["GET", "POST", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
 
 app.use(express.json());
 
@@ -14,9 +26,11 @@ app.get("/", (req, res) => {
     message: "MAX backend is running",
   });
 });
+
 app.get("/api/waiting-requests", (req, res) => {
   res.json(waitingRequests);
 });
+
 app.post("/api/waiting-requests", (req, res) => {
   const {
     userId,
@@ -25,11 +39,12 @@ app.post("/api/waiting-requests", (req, res) => {
     dateTo,
     weekdays,
     timeFrom,
-    timeTo
+    timeTo,
   } = req.body;
+
   if (!userId) {
     return res.status(400).json({
-      error: "userId is required"
+      error: "userId is required",
     });
   }
 
@@ -43,16 +58,18 @@ app.post("/api/waiting-requests", (req, res) => {
     timeFrom,
     timeTo,
     status: "active",
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
   };
 
   waitingRequests.push(newRequest);
 
   res.status(201).json(newRequest);
 });
+
 app.get("/api/schedule", (req, res) => {
   res.json(doctorSchedule);
 });
+
 app.get("/api/matches", (req, res) => {
   const matches = [];
 
@@ -66,7 +83,7 @@ app.get("/api/matches", (req, res) => {
         matches.push({
           requestId: request.id,
           userId: request.userId,
-          slot: slot
+          slot: slot,
         });
       }
     }
@@ -74,7 +91,8 @@ app.get("/api/matches", (req, res) => {
 
   res.json(matches);
 });
-//Получить конкретную заявку
+
+// Получить конкретную заявку
 app.get("/api/waiting-requests/:id", (req, res) => {
   const requestId = Number(req.params.id);
 
@@ -84,13 +102,14 @@ app.get("/api/waiting-requests/:id", (req, res) => {
 
   if (!waitingRequest) {
     return res.status(404).json({
-      error: "Waiting request not found"
+      error: "Waiting request not found",
     });
   }
 
   res.json(waitingRequest);
 });
-//Отменить ожидание
+
+// Отменить ожидание
 app.patch("/api/waiting-requests/:id/cancel", (req, res) => {
   const requestId = Number(req.params.id);
 
@@ -100,7 +119,7 @@ app.patch("/api/waiting-requests/:id/cancel", (req, res) => {
 
   if (!waitingRequest) {
     return res.status(404).json({
-      error: "Waiting request not found"
+      error: "Waiting request not found",
     });
   }
 
@@ -108,7 +127,8 @@ app.patch("/api/waiting-requests/:id/cancel", (req, res) => {
 
   res.json(waitingRequest);
 });
-//Тестовый эндпоинт
+
+// Тестовый эндпоинт
 app.post("/api/check-matches", (req, res) => {
   const notifications = [];
 
@@ -122,7 +142,7 @@ app.post("/api/check-matches", (req, res) => {
         const match = {
           requestId: request.id,
           userId: request.userId,
-          slot: slot
+          slot: slot,
         };
 
         const notification = createMatchNotification(match);
@@ -133,9 +153,10 @@ app.post("/api/check-matches", (req, res) => {
 
   res.json({
     found: notifications.length,
-    notifications: notifications
+    notifications: notifications,
   });
 });
+
 app.post("/api/schedule", (req, res) => {
   const {
     doctorId,
@@ -143,7 +164,7 @@ app.post("/api/schedule", (req, res) => {
     specialty,
     date,
     weekday,
-    time
+    time,
   } = req.body;
 
   const newSlot = {
@@ -154,7 +175,7 @@ app.post("/api/schedule", (req, res) => {
     date,
     weekday,
     time,
-    available: true
+    available: true,
   };
 
   doctorSchedule.push(newSlot);
@@ -170,7 +191,7 @@ app.post("/api/schedule", (req, res) => {
       const match = {
         requestId: request.id,
         userId: request.userId,
-        slot: newSlot
+        slot: newSlot,
       };
 
       const notification = createMatchNotification(match);
@@ -182,10 +203,11 @@ app.post("/api/schedule", (req, res) => {
   res.status(201).json({
     slot: newSlot,
     matchesFound: matches.length,
-    notifications: matches
+    notifications: matches,
   });
 });
-//Получение ожидания пользователя
+
+// Получение ожидания пользователя
 app.get("/api/users/:userId/waiting", (req, res) => {
   const userId = req.params.userId;
 
@@ -195,14 +217,14 @@ app.get("/api/users/:userId/waiting", (req, res) => {
 
   res.json(requests);
 });
-//Получить найденные записи пользователя
+
+// Получить найденные записи пользователя
 app.get("/api/users/:userId/matches", (req, res) => {
   const userId = req.params.userId;
 
   const matches = [];
 
   for (const request of waitingRequests) {
-
     if (
       request.userId !== userId ||
       request.status !== "active"
@@ -211,44 +233,39 @@ app.get("/api/users/:userId/matches", (req, res) => {
     }
 
     for (const slot of doctorSchedule) {
-
       if (isSlotMatching(request, slot)) {
-
         matches.push({
           doctorName: slot.doctorName,
           specialty: slot.specialty,
           date: slot.date,
-          time: slot.time
+          time: slot.time,
         });
-
       }
     }
   }
 
   res.json(matches);
 });
-app.get("/api/waiting-requests/:id/status", (req, res) => {
 
+app.get("/api/waiting-requests/:id/status", (req, res) => {
   const id = Number(req.params.id);
 
   const request = waitingRequests.find(
     (item) => item.id === id
   );
 
-
   if (!request) {
     return res.status(404).json({
-      error: "Request not found"
+      error: "Request not found",
     });
   }
 
-
   res.json({
     id: request.id,
-    status: request.status
+    status: request.status,
   });
-
 });
+
 app.listen(PORT, () => {
   console.log(`Server started on http://localhost:${PORT}`);
 });
