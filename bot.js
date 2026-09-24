@@ -4,20 +4,16 @@ const http = require('http');
 const { notifyUser } = require('./notifications');
 const { saveUser } = require('./users');
 
-
 async function main() {
 
-  const { Bot, Keyboard } = await import('@maxhub/max-bot-api');
-
+  const { Bot } = await import('@maxhub/max-bot-api');
 
   const token = process.env.MAX_BOT_TOKEN;
-
 
   if (!token) {
     console.error('Ошибка: MAX_BOT_TOKEN не найден в .env');
     process.exit(1);
   }
-
 
   const bot = new Bot(token);
 
@@ -43,14 +39,11 @@ async function main() {
       return;
     }
 
-
     let body = '';
-
 
     req.on('data', (chunk) => {
       body += chunk;
     });
-
 
     req.on('end', async () => {
 
@@ -60,7 +53,6 @@ async function main() {
           userId,
           appointment
         } = JSON.parse(body);
-
 
         if (!userId || !appointment) {
 
@@ -77,11 +69,9 @@ async function main() {
           return;
         }
 
-
         console.log(
           `📨 Получено уведомление для пользователя ${userId}`
         );
-
 
         const sent = await notifyUser(
           bot,
@@ -89,18 +79,15 @@ async function main() {
           appointment
         );
 
-
         res.writeHead(sent ? 200 : 500, {
           'Content-Type': 'application/json'
         });
-
 
         res.end(
           JSON.stringify({
             sent
           })
         );
-
 
       } catch (error) {
 
@@ -109,11 +96,9 @@ async function main() {
           error
         );
 
-
         res.writeHead(400, {
           'Content-Type': 'application/json'
         });
-
 
         res.end(
           JSON.stringify({
@@ -142,27 +127,12 @@ async function main() {
 
 
   // ============================
-  // Кнопка открытия Mini App
-  // ============================
-
-  const startKeyboard = Keyboard.inlineKeyboard([
-    [
-      Keyboard.button.openApp(
-        '🔎 Ждать свободное окно',
-        'https://max-doctor-wait.vercel.app'
-      )
-    ]
-  ]);
-
-
-  // ============================
   // /start
   // ============================
 
   async function sendWelcome(ctx) {
 
     const userId = ctx.user?.user_id;
-
 
     if (userId) {
 
@@ -171,21 +141,16 @@ async function main() {
         name: ctx.user?.first_name
       });
 
-
       console.log(
         `👤 Пользователь MAX сохранён: ${userId}`
       );
 
     }
 
-
     await ctx.reply(
       'Привет! 👋\n\n' +
       'Я помогу дождаться подходящего времени для записи к врачу.\n\n' +
-      'Нажми кнопку ниже, чтобы создать ожидание.',
-      {
-        attachments: [startKeyboard]
-      }
+      'Чтобы создать ожидание, нажмите кнопку «Открыть» в интерфейсе MAX.'
     );
 
   }
@@ -213,7 +178,6 @@ async function main() {
 
       const userId = ctx.user?.user_id;
 
-
       if (!userId) {
 
         console.log(
@@ -222,7 +186,6 @@ async function main() {
 
         return;
       }
-
 
       const appointment = {
 
@@ -234,11 +197,9 @@ async function main() {
 
       };
 
-
       console.log(
         `🧪 Отправка тестового уведомления пользователю ${userId}`
       );
-
 
       await notifyUser(
         bot,
@@ -258,9 +219,7 @@ async function main() {
     'Запускаю MAX-бота...'
   );
 
-
   await bot.start();
-
 
   console.log(
     'MAX-бот запущен и ждёт сообщения.'
