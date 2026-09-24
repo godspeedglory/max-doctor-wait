@@ -29,6 +29,7 @@ async function main() {
   const notificationServer = http.createServer((req, res) => {
 
     if (req.method !== 'POST' || req.url !== '/notify') {
+
       res.writeHead(404, {
         'Content-Type': 'application/json'
       });
@@ -141,14 +142,14 @@ async function main() {
 
 
   // ============================
-  // Кнопка
+  // Кнопка открытия Mini App
   // ============================
 
   const startKeyboard = Keyboard.inlineKeyboard([
     [
-      Keyboard.button.callback(
+      Keyboard.button.openApp(
         '🔎 Ждать свободное окно',
-        'create_waiting'
+        'https://max-doctor-wait.vercel.app'
       )
     ]
   ]);
@@ -199,23 +200,6 @@ async function main() {
   bot.on(
     'bot_started',
     sendWelcome
-  );
-
-
-  // ============================
-  // Кнопка ожидания
-  // ============================
-
-  bot.action(
-    'create_waiting',
-    async (ctx) => {
-
-      await ctx.reply(
-        'Отлично! ✅\n\n' +
-        'Ожидание записи будет создано через Mini App.'
-      );
-
-    }
   );
 
 

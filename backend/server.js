@@ -4,10 +4,14 @@ const cors = require("cors");
 const waitingRequests = require("./data/waitingRequests");
 const doctorSchedule = require("./data/doctorSchedule");
 const { isSlotMatching } = require("./services/matchingEngine");
-const { createMatchNotification } = require("./services/notificationService");
+const {
+  createMatchNotification,
+} = require("./services/notificationService");
 
 const app = express();
 const PORT = 3000;
+
+const BOT_NOTIFICATION_URL = "http://127.0.0.1:3001/notify";
 
 // Разрешаем запросы из Mini App на Vercel
 app.use(
@@ -20,6 +24,58 @@ app.use(
 
 app.use(express.json());
 
+
+// ============================
+// Отправка уведомления боту
+// ============================
+
+async function sendNotificationToBot(notification) {
+  try {
+    const response = await fetch(BOT_NOTIFICATION_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId: notification.userId,
+        appointment: notification.appointment,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+
+      console.error(
+        "Ошибка отправки уведомления боту:",
+        response.status,
+        errorText
+      );
+
+      return false;
+    }
+
+    const result = await response.json();
+
+    console.log(
+      `Уведомление передано боту для пользователя ${notification.userId}`
+    );
+
+    return result.sent === true;
+  } catch (error) {
+    console.error(
+      "Не удалось подключиться к сервису уведомлений:",
+      error.message
+    );
+
+    return false;
+  }
+}
+
+
+// ============================
+// Главная
+// ============================
+
 app.get("/", (req, res) => {
   res.json({
     status: "ok",
@@ -27,9 +83,15 @@ app.get("/", (req, res) => {
   });
 });
 
+
+// ============================
+// Ожидания
+// ============================
+
 app.get("/api/waiting-requests", (req, res) => {
   res.json(waitingRequests);
 });
+
 
 app.post("/api/waiting-requests", (req, res) => {
   const {
@@ -66,9 +128,19 @@ app.post("/api/waiting-requests", (req, res) => {
   res.status(201).json(newRequest);
 });
 
+
+// ============================
+// Расписание
+// ============================
+
 app.get("/api/schedule", (req, res) => {
   res.json(doctorSchedule);
 });
+
+
+// ============================
+// Все совпадения
+// ============================
 
 app.get("/api/matches", (req, res) => {
   const matches = [];
@@ -92,7 +164,11 @@ app.get("/api/matches", (req, res) => {
   res.json(matches);
 });
 
-// Получить конкретную заявку
+
+// ============================
+// Конкретная заявка
+// ============================
+
 app.get("/api/waiting-requests/:id", (req, res) => {
   const requestId = Number(req.params.id);
 
@@ -109,7 +185,11 @@ app.get("/api/waiting-requests/:id", (req, res) => {
   res.json(waitingRequest);
 });
 
-// Отменить ожидание
+
+// ============================
+// Отмена ожидания
+// ============================
+
 app.patch("/api/waiting-requests/:id/cancel", (req, res) => {
   const requestId = Number(req.params.id);
 
@@ -128,8 +208,12 @@ app.patch("/api/waiting-requests/:id/cancel", (req, res) => {
   res.json(waitingRequest);
 });
 
-// Тестовый эндпоинт
-app.post("/api/check-matches", (req, res) => {
+
+// ============================
+// Проверка совпадений
+// ============================
+
+app.post("/api/check-matches", async (req, res) => {
   const notifications = [];
 
   for (const request of waitingRequests) {
@@ -146,7 +230,10 @@ app.post("/api/check-matches", (req, res) => {
         };
 
         const notification = createMatchNotification(match);
+
         notifications.push(notification);
+
+        await sendNotificationToBot(notification);
       }
     }
   }
@@ -157,7 +244,12 @@ app.post("/api/check-matches", (req, res) => {
   });
 });
 
-app.post("/api/schedule", (req, res) => {
+
+// ============================
+// Добавление нового слота
+// ============================
+
+app.post("/api/schedule", async (req, res) => {
   const {
     doctorId,
     doctorName,
@@ -197,6 +289,8 @@ app.post("/api/schedule", (req, res) => {
       const notification = createMatchNotification(match);
 
       matches.push(notification);
+
+      await sendNotificationToBot(notification);
     }
   }
 
@@ -207,7 +301,11 @@ app.post("/api/schedule", (req, res) => {
   });
 });
 
-// Получение ожидания пользователя
+
+// ============================
+// Ожидания пользователя
+// ============================
+
 app.get("/api/users/:userId/waiting", (req, res) => {
   const userId = req.params.userId;
 
@@ -218,7 +316,11 @@ app.get("/api/users/:userId/waiting", (req, res) => {
   res.json(requests);
 });
 
-// Получить найденные записи пользователя
+
+// ============================
+// Найденные записи пользователя
+// ============================
+
 app.get("/api/users/:userId/matches", (req, res) => {
   const userId = req.params.userId;
 
@@ -247,6 +349,11 @@ app.get("/api/users/:userId/matches", (req, res) => {
   res.json(matches);
 });
 
+
+// ============================
+// Статус ожидания
+// ============================
+
 app.get("/api/waiting-requests/:id/status", (req, res) => {
   const id = Number(req.params.id);
 
@@ -266,6 +373,13 @@ app.get("/api/waiting-requests/:id/status", (req, res) => {
   });
 });
 
+
+// ============================
+// Запуск сервера
+// ============================
+
 app.listen(PORT, () => {
-  console.log(`Server started on http://localhost:${PORT}`);
+  console.log(
+    `Server started on http://localhost:${PORT}`
+  );
 });
