@@ -1,0 +1,20 @@
+FROM node:24-alpine
+
+WORKDIR /app
+
+# Install support for system CA certificates
+RUN apk add --no-cache ca-certificates
+
+# Add the public Russian Trusted Root CA certificate
+COPY russian-trusted-root-ca.crt /usr/local/share/ca-certificates/russian-trusted-root-ca.crt
+RUN update-ca-certificates
+
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+COPY bot.js notifications.js users.js ./
+COPY users.json ./
+
+EXPOSE 3001
+
+CMD ["node", "--use-system-ca", "bot.js"]

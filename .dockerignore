@@ -1,0 +1,14 @@
+node_modules
+backend/node_modules
+miniapp/node_modules
+miniapp/dist
+
+.env
+.env.*
+!.env.example
+
+.git
+.gitignore
+
+npm-debug.log*
+*.log

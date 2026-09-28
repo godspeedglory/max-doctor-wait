@@ -113,13 +113,16 @@ async function main() {
   });
 
 
+  const notificationHost =
+    process.env.NOTIFICATION_HOST || '127.0.0.1';
+
   notificationServer.listen(
     3001,
-    '127.0.0.1',
+    notificationHost,
     () => {
 
       console.log(
-        'Сервис уведомлений запущен на http://127.0.0.1:3001'
+        `Сервис уведомлений запущен на http://${notificationHost}:3001`
       );
 
     }

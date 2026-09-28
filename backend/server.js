@@ -11,7 +11,8 @@ const {
 const app = express();
 const PORT = 3000;
 
-const BOT_NOTIFICATION_URL = "http://127.0.0.1:3001/notify";
+const BOT_NOTIFICATION_URL =
+  process.env.BOT_NOTIFICATION_URL || "http://127.0.0.1:3001/notify";
 
 // Разрешаем запросы из Mini App на Vercel
 app.use(
