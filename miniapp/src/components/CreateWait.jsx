@@ -83,7 +83,7 @@ function CreateWait({ onCreate }) {
       setIsLoading(true);
 
       const response = await fetch(
-        "https://portland-senators-blonde-largest.trycloudflare.com/api/waiting-requests",
+        "https://hoped-supporters-folk-load.trycloudflare.com/api/waiting-requests",
         {
           method: "POST",
           headers: {

@@ -11,7 +11,7 @@ function App() {
     async function loadWaits() {
       try {
         const response = await fetch(
-          "https://portland-senators-blonde-largest.trycloudflare.com/api/waiting-requests"
+          "https://hoped-supporters-folk-load.trycloudflare.com/api/waiting-requests"
         );
 
         if (!response.ok) {
@@ -44,7 +44,7 @@ function App() {
   async function deleteWait(id) {
     try {
       const response = await fetch(
-        `https://portland-senators-blonde-largest.trycloudflare.com/api/waiting-requests/${id}/cancel`,
+        `https://hoped-supporters-folk-load.trycloudflare.com/api/waiting-requests/${id}/cancel`,
         {
           method: "PATCH",
         }
