@@ -61,7 +61,7 @@ ctx.user.user_id
 
 ```json
 {
-  "userId": 24329769,
+  "userId": <MAX_USER_ID>,
   "name": "Елизавета"
 }
 ```
@@ -83,7 +83,7 @@ users.json
 ```json
 [
   {
-    "userId": 24329769,
+    "userId":<MAX_USER_ID>,
     "name": "Елизавета"
   }
 ]
