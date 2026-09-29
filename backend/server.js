@@ -235,6 +235,8 @@ app.post("/api/check-matches", async (req, res) => {
         notifications.push(notification);
 
         await sendNotificationToBot(notification);
+        request.status = "matched";
+        break;
       }
     }
   }
@@ -373,6 +375,45 @@ app.get("/api/waiting-requests/:id/status", (req, res) => {
     status: request.status,
   });
 });
+
+
+// ============================
+// Автоматическая проверка совпадений
+// ============================
+
+async function checkMatchesAutomatically() {
+  for (const request of waitingRequests) {
+    if (request.status !== "active") {
+      continue;
+    }
+
+    for (const slot of doctorSchedule) {
+      if (isSlotMatching(request, slot)) {
+        const match = {
+          requestId: request.id,
+          userId: request.userId,
+          slot: slot,
+        };
+
+        const notification = createMatchNotification(match);
+
+        try {
+          await sendNotificationToBot(notification);
+          request.status = "matched";
+          break;
+        } catch (error) {
+          console.error("Automatic notification error:", error);
+        }
+      }
+    }
+  }
+}
+
+setInterval(() => {
+  checkMatchesAutomatically().catch((error) => {
+    console.error("Automatic matching error:", error);
+  });
+}, 30000);
 
 
 // ============================
