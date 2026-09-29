@@ -11,7 +11,7 @@ function App() {
     async function loadWaits() {
       try {
         const response = await fetch(
-          "https://litigation-boating-yesterday-cooling.trycloudflare.com/api/waiting-requests"
+          "https://135-106-228-57.sslip.io/api/waiting-requests"
         );
 
         if (!response.ok) {
@@ -44,7 +44,7 @@ function App() {
   async function deleteWait(id) {
     try {
       const response = await fetch(
-        `https://litigation-boating-yesterday-cooling.trycloudflare.com/api/waiting-requests/${id}/cancel`,
+        `https://135-106-228-57.sslip.io/api/waiting-requests/${id}/cancel`,
         {
           method: "PATCH",
         }

@@ -83,7 +83,7 @@ function CreateWait({ onCreate }) {
       setIsLoading(true);
 
       const response = await fetch(
-        "https://litigation-boating-yesterday-cooling.trycloudflare.com/api/waiting-requests",
+        "https://135-106-228-57.sslip.io/api/waiting-requests",
         {
           method: "POST",
           headers: {
